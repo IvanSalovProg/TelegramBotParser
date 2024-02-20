@@ -4,8 +4,6 @@ import com.codereview.telegrambotparser.model.Vacancy;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +29,6 @@ public abstract class VacancyParser {
     public List<Vacancy> parser() {
         List<Vacancy> list = new ArrayList<>();
         try {
-            //key = message.replace(" ", "%20");
             list = new ArrayList<>(startParser());
         } catch (Exception ex) {
             log.error(ex.getMessage());

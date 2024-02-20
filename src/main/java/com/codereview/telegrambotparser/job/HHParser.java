@@ -12,37 +12,17 @@ import java.util.List;
 @Slf4j
 public class HHParser extends VacancyParser{
 
-    private final String URL_PART1 = "https://hh.ru/search/vacancy?text=";
-    private final String URL_PART2 = "java&salary=&ored_clusters=true&search_field=name&enable_snippets=true&page=";
+    private final String URL_PART1 = "https://hh.ru/search/vacancy?enable_snippets=true&ored_clusters=true&search_field=name&text=";
+    private final String URL_PART2 = "&search_period=1&disableBrowserCache=true&page=";
     private final String HH_URL;
-    private final String key;
-    private final String vacancyType;
     private int positionCounter = 1;
 
     public HHParser(String vacancyType) {
         HH_URL = URL_PART1 + vacancyType.toLowerCase() + URL_PART2;
-        key = vacancyType.toLowerCase().replace(" ", "%20");
-        this.vacancyType = vacancyType;
     }
 
-    public String start() {
-        List<Vacancy> vacancies = parser();
-        StringBuilder textMessage = new StringBuilder();
-        log.info("Список вакансий по направлению: " + vacancyType);
-        for (Vacancy vacancy : vacancies) {
-            log.info(vacancy.getPosition() + "- " + vacancy.getName() + " " + vacancy.getCompany());
-            log.info(vacancy.getDescription());
-            log.info(vacancy.getUrl());
-            textMessage.append(vacancy.getPosition() + ". ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancy.getName() + " ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancy.getCompany() + " ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancy.getUrl());
-            textMessage.append(System.lineSeparator().repeat(1));
-        }
-        return textMessage.toString();
+    public List<Vacancy> start() {
+        return parser();
     }
 
     public String nextPageUrl(int page) {
@@ -67,9 +47,14 @@ public class HHParser extends VacancyParser{
                 String element2 = "";
                 if (titleElement2 != null)
                     element2 = titleElement2.getElementsByTag("a").text();
+                Element titleElement3 = q.getElementsByClass("g-user-content").first();
+                String element3 = "";
+                if (titleElement3 != null)
+                    element3 = titleElement3.getElementsByClass("bloko-text").text();
                 vacancyInformation.setPosition(positionCounter++);
                 vacancyInformation.setName(element1);
                 vacancyInformation.setCompany(element2);
+                vacancyInformation.setDescription(element3);
                 String url = titleElement1.attr("href");
                 vacancyInformation.setUrl(url);
             }
