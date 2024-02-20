@@ -1,7 +1,7 @@
 package com.codereview.telegrambotparser.service;
 
 import com.codereview.telegrambotparser.config.BotConfig;
-import com.codereview.telegrambotparser.job.VacancyParser;
+import com.codereview.telegrambotparser.job.HHParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -62,9 +62,8 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         sendMessageToChat(chatId, vacanciesMessage);
 
-        String urlBase = "https://novosibirsk.hh.ru/search/vacancy?text=java&area=4&page=";
-        VacancyParser vacancyParser = new VacancyParser(urlBase);
-        vacanciesMessage = vacancyParser.start();
+        HHParser hhParser = new HHParser("Java");
+        vacanciesMessage = hhParser.start();
 
         sendMessageToChat(chatId, vacanciesMessage);
     }
