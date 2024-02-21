@@ -98,8 +98,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<Vacancy> vacancies = service.getAll();
         getMessageListVacancies(chatId, vacancies);
 
-        HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
-        HabrParser habrParserJava = new HabrParser("java&s[]=2");
+        /*HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
+        HabrParser habrParserJava = new HabrParser("java&s[]=2");*/
+        HabrParser habrParserCharp = new HabrParser("C#");
+        HabrParser habrParserJava = new HabrParser("Java");
         getMessageListVacancies(chatId, hhParser.start());
         getMessageListVacancies(chatId, habrParserCharp.start());
         getMessageListVacancies(chatId, habrParserJava.start());

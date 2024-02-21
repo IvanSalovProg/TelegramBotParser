@@ -20,8 +20,20 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
     private VacancyType vacancyType;
 
     public HabrParser(String vacancyType) {
-        Habr_URL = URL_PART1 + vacancyType.toLowerCase() + URL_PART2;
-        this.vacancyType = VacancyType.valueOf(vacancyType.toUpperCase());
+        String vacancy = "";
+        String type = "";
+        if(vacancyType.equals("Java")) {
+            vacancy = "java&s[]=2";
+            type = vacancyType;
+        }
+        if(vacancyType.equals("C#")) {
+            vacancy = "C%23&s%5B%5D=2";
+            type = "C_SHARP";
+        }
+        //HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
+        //HabrParser habrParserJava = new HabrParser("java&s[]=2");
+        Habr_URL = URL_PART1 + vacancy + URL_PART2;
+        this.vacancyType = VacancyType.valueOf(type.toUpperCase());
     }
 
     public List<Vacancy> start() {
