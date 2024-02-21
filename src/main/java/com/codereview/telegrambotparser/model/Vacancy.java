@@ -32,6 +32,9 @@ public class Vacancy {
     @Column(name = "grade")
     private String grade;
 
+    @Column(name = "site")
+    private NameSite site;
+
     @Column(name = "type")
     private VacancyType type;
 

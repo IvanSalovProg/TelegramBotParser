@@ -1,6 +1,8 @@
 package com.codereview.telegrambotparser.repository;
 
+import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
+import com.codereview.telegrambotparser.model.VacancyType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -15,4 +17,6 @@ public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
     @Query("SELECT v FROM Vacancy v WHERE v.url =:url")
     List<Vacancy> findByUrl(String url);
 
+    @Query("SELECT v FROM Vacancy v WHERE v.type =:type AND v.site =:site")
+    List<Vacancy> findByTypeAndSite(VacancyType type, NameSite site);
 }

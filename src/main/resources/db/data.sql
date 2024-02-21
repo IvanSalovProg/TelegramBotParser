@@ -4,11 +4,12 @@ DROP SEQUENCE IF EXISTS VACANCY_ID_SEQ;
 create table VACANCY
 (
     ID bigserial primary key,
-    NAME varchar(1024) not null,
-    COMPANY varchar(1024) not null,
-    TYPE varchar(1024) not null,
-    LOCATION varchar(1024) not null,
+    NAME varchar(1024),
+    COMPANY varchar(1024),
+    TYPE smallint,
+    LOCATION varchar(1024),
     SCHEDULE varchar(1024),
     GRADE varchar(1024),
-    URL varchar(1024) not null
+    URL varchar(1024),
+    SITE smallint
 );

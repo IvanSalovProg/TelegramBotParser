@@ -1,5 +1,6 @@
 package com.codereview.telegrambotparser.job;
 
+import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
 import lombok.extern.slf4j.Slf4j;
@@ -21,19 +22,19 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
 
     public HabrParser(String vacancyType) {
         String vacancy = "";
-        String type = "";
+        VacancyType type = null;
         if(vacancyType.equals("Java")) {
             vacancy = "java&s[]=2";
-            type = vacancyType;
+            type = VacancyType.JAVA;
         }
         if(vacancyType.equals("C#")) {
             vacancy = "C%23&s%5B%5D=2";
-            type = "C_SHARP";
+            type = VacancyType.C_SHARP;
         }
         //HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
         //HabrParser habrParserJava = new HabrParser("java&s[]=2");
         Habr_URL = URL_PART1 + vacancy + URL_PART2;
-        this.vacancyType = VacancyType.valueOf(type.toUpperCase());
+        this.vacancyType = type;
     }
 
     public List<Vacancy> start() {
@@ -76,6 +77,7 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
               //  vacancyInformation.setGrade(grade);
                // vacancyInformation.setSchedule(schedule);
                 vacancyInformation.setType(vacancyType);
+                vacancyInformation.setSite(NameSite.HABR);
                 positionCounter++;
             }
             return vacancyInformation;

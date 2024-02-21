@@ -1,5 +1,6 @@
 package com.codereview.telegrambotparser.job;
 
+import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,7 @@ public class HHParser extends VacancyParser{
                 vacancyInformation.setGrade(grade);
                 vacancyInformation.setSchedule(schedule);
                 vacancyInformation.setType(vacancyType);
+                vacancyInformation.setSite(NameSite.HH);
                 positionCounter++;
             }
             return vacancyInformation;
