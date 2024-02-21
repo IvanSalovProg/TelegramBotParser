@@ -74,8 +74,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies) {
         StringBuilder textMessage = new StringBuilder();
-        for (int index = 0; index < vacancies.size() - 1; index++) {
-            if (index != 0 && index % 5 == 0) {
+        sendMessageToChat(chatId, "Всего вакансий: " + vacancies.size());
+        for (int index = 0; index < vacancies.size(); index++) {
+            if ((index != 0 && index % 5 == 0)) {
                 sendMessageToChat(chatId, textMessage.toString());
                 textMessage = new StringBuilder();
             }
@@ -93,6 +94,10 @@ public class TelegramBot extends TelegramLongPollingBot {
             textMessage.append(vacancies.get(index).getUrl());
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(System.lineSeparator().repeat(1));
+
+            if(index == vacancies.size() - 1) {
+                sendMessageToChat(chatId, textMessage.toString());
+            }
         }
     }
 
