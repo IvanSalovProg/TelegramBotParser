@@ -1,6 +1,7 @@
 package com.codereview.telegrambotparser.job;
 
 import com.codereview.telegrambotparser.model.Vacancy;
+import com.codereview.telegrambotparser.model.VacancyType;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -16,9 +17,11 @@ public class HHParser extends VacancyParser{
     private final String URL_PART2 = "&search_period=1&disableBrowserCache=true&page=";
     private final String HH_URL;
     private int positionCounter = 1;
+    private VacancyType vacancyType;
 
     public HHParser(String vacancyType) {
         HH_URL = URL_PART1 + vacancyType.toLowerCase() + URL_PART2;
+        this.vacancyType = VacancyType.valueOf(vacancyType.toUpperCase());
     }
 
     public List<Vacancy> start() {
@@ -39,29 +42,42 @@ public class HHParser extends VacancyParser{
 
         List<Vacancy> element = elements.stream().map(q -> {
             Vacancy vacancyInformation = new Vacancy();
-            Element titleElement1 = q.getElementsByClass("bloko-link").first();
-            if (titleElement1 != null) {
-                String element1 = "";
-                element1 = titleElement1.getElementsByTag("a").text();
-                Element titleElement2 = q.getElementsByClass("vacancy-serp-item__meta-info-company").first();
-                String element2 = "";
-                if (titleElement2 != null)
-                    element2 = titleElement2.getElementsByTag("a").text();
-                Element titleElement3 = q.getElementsByClass("g-user-content").first();
-                String element3 = "";
-                if (titleElement3 != null)
-                    element3 = titleElement3.getElementsByClass("bloko-text").text();
-                vacancyInformation.setPosition(positionCounter++);
-                vacancyInformation.setName(element1);
-                vacancyInformation.setCompany(element2);
-                vacancyInformation.setDescription(element3);
-                String url = titleElement1.attr("href");
+            Element titleName = q.getElementsByClass("bloko-link").first();
+            if (titleName != null) {
+                String name = "";
+                name = titleName.getElementsByTag("a").text();
+                Element titleCompany = q.getElementsByClass("vacancy-serp-item__meta-info-company").first();
+                String company = "";
+                if (titleCompany != null)
+                    company = titleCompany.getElementsByTag("a").text();
+                Element titleLocation = q.getElementsByAttributeValue("data-qa", "vacancy-serp__vacancy-address").first();
+                String location = "";
+                if (titleLocation != null)
+                    location = titleLocation.getElementsByClass("bloko-text").text();
+                Element titleSchedule = q.getElementsByClass("labels--CBiQJ5KZ2PKw9wf0Aizk").first();
+                String schedule = "";
+                if (titleSchedule != null)
+                    schedule = titleSchedule.getElementsByClass("label_light-violet--mfqJrKkFOboQUFsgaJp2").text();
+                Element titleGrade = q.getElementsByClass("bloko-h-spacing-container_base-0").first();
+                String grade = "";
+                if (titleGrade != null)
+                    grade = titleGrade.getElementsByClass("bloko-text").text();
+
+                String url = titleName.attr("href");
+
+                vacancyInformation.setLocation(location);
+                vacancyInformation.setName(name);
+                vacancyInformation.setCompany(company);
                 vacancyInformation.setUrl(url);
+                vacancyInformation.setGrade(grade);
+                vacancyInformation.setSchedule(schedule);
+                vacancyInformation.setType(vacancyType);
+                positionCounter++;
             }
             return vacancyInformation;
         }).toList();
 
-        element = element.stream().filter(q -> q.getPosition() > 0).toList();
+        //element = element.stream().filter(q -> q.getPosition() > 0).toList();
         return (position != positionCounter) ? new ArrayList<>(element) : new ArrayList<>();
 
     }

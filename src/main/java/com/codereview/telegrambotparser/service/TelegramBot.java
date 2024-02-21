@@ -15,10 +15,13 @@ import java.util.List;
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
-   final BotConfig config;
 
-    public TelegramBot(BotConfig config) {
+    final VacancyService service;
+    final BotConfig config;
+
+    public TelegramBot(BotConfig config, VacancyService service) {
         this.config = config;
+        this.service = service;
     }
 
     @Override
@@ -64,22 +67,28 @@ public class TelegramBot extends TelegramLongPollingBot {
         String vacanciesMessage = "Список новых вакансий по Java на hh.ru:\n";
         sendMessageToChat(chatId, vacanciesMessage);
         HHParser hhParser = new HHParser("Java");
-        getMessageListVacancies(chatId, hhParser.start());
+        service.addAll(hhParser.start());
+        List<Vacancy> vacancies = service.getAll();
+        getMessageListVacancies(chatId, vacancies);
     }
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies) {
         StringBuilder textMessage = new StringBuilder();
-        for(int index = 0; index < vacancies.size() - 1; index ++) {
-            if(index != 0 && index % 5 == 0 ) {
+        for (int index = 0; index < vacancies.size() - 1; index++) {
+            if (index != 0 && index % 5 == 0) {
                 sendMessageToChat(chatId, textMessage.toString());
                 textMessage = new StringBuilder();
             }
-            textMessage.append(vacancies.get(index).getPosition()).append(". ");
+            textMessage.append(vacancies.get(index).getId()).append(". ");
             textMessage.append(vacancies.get(index).getName()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getCompany()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getDescription());
+            textMessage.append(vacancies.get(index).getLocation()).append(" ");
+            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getGrade()).append(" ");
+            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getSchedule()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getUrl());
             textMessage.append(System.lineSeparator().repeat(1));
