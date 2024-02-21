@@ -2,6 +2,7 @@ package com.codereview.telegrambotparser.service;
 
 import com.codereview.telegrambotparser.config.BotConfig;
 import com.codereview.telegrambotparser.job.HHParser;
+import com.codereview.telegrambotparser.job.HabrParser;
 import com.codereview.telegrambotparser.model.Vacancy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,30 @@ import java.util.List;
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
+
+    enum VacancyType {
+        HH("HH Parser"),
+        HABR_C_SHARP("Habr Parser C#"),
+        HABR_JAVA("Habr Parser Java");
+
+        private final String displayName;
+
+        VacancyType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
    final BotConfig config;
 
-    public TelegramBot(BotConfig config) {
+
+    final VacancyService service;
+
+    public TelegramBot(BotConfig config, VacancyService service) {
         this.config = config;
+        this.service = service;
     }
 
     @Override
@@ -61,29 +82,56 @@ public class TelegramBot extends TelegramLongPollingBot {
         // Здесь можно добавить код для парсинга вакансий из различных источников
         // и форматирования списка вакансий
 
-        String vacanciesMessage = "Список новых вакансий по Java на hh.ru:\n";
-        sendMessageToChat(chatId, vacanciesMessage);
+        /*String vacanciesMessage = "Список новых вакансий:\n";
+        sendMessageToChat(chatId, vacanciesMessage); */
+        StringBuilder vacanciesMessage = new StringBuilder("Список новых вакансий:\n");
+
+        for (VacancyType type : VacancyType.values()) {
+            vacanciesMessage.append(type.getDisplayName()).append("\n");
+        }
+
+        // Отправка сообщения в чат
+        sendMessageToChat(chatId, vacanciesMessage.toString());
+
         HHParser hhParser = new HHParser("Java");
+        service.addAll(hhParser.start());
+        List<Vacancy> vacancies = service.getAll();
+        getMessageListVacancies(chatId, vacancies);
+
+        HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
+        HabrParser habrParserJava = new HabrParser("java&s[]=2");
         getMessageListVacancies(chatId, hhParser.start());
+        getMessageListVacancies(chatId, habrParserCharp.start());
+        getMessageListVacancies(chatId, habrParserJava.start());
+
     }
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies) {
         StringBuilder textMessage = new StringBuilder();
-        for(int index = 0; index < vacancies.size() - 1; index ++) {
-            if(index != 0 && index % 5 == 0 ) {
+        sendMessageToChat(chatId, "Всего вакансий: " + vacancies.size());
+        for (int index = 0; index < vacancies.size(); index++) {
+            if ((index != 0 && index % 5 == 0)) {
                 sendMessageToChat(chatId, textMessage.toString());
                 textMessage = new StringBuilder();
             }
-            textMessage.append(vacancies.get(index).getPosition()).append(". ");
+            textMessage.append(vacancies.get(index).getId()).append(". ");
             textMessage.append(vacancies.get(index).getName()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getCompany()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getDescription());
+            textMessage.append(vacancies.get(index).getLocation()).append(" ");
+            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getGrade()).append(" ");
+            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getSchedule()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getUrl());
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(System.lineSeparator().repeat(1));
+
+            if(index == vacancies.size() - 1) {
+                sendMessageToChat(chatId, textMessage.toString());
+            }
         }
     }
 

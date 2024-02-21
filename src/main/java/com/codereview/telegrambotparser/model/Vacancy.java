@@ -1,28 +1,40 @@
 package com.codereview.telegrambotparser.model;
 
-//import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
-@Data
+@Entity
+@Table(name = "vacancy")
 @Getter
 @Setter
-@Entity(name ="Vacancy")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Vacancy {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private long id;
 
-    private int position;
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "company")
     private String company;
-    private String Description;
+
+    @Column(name = "location")
+    private String location;
+
+    @Column(name = "schedule")
+    private String schedule;
+
+    @Column(name = "grade")
+    private String grade;
+
+    @Column(name = "type")
+    private VacancyType type;
+
+    @Column(name = "url")
     private String url;
 }
