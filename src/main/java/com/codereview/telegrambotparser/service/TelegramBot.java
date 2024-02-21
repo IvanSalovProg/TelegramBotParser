@@ -2,6 +2,7 @@ package com.codereview.telegrambotparser.service;
 
 import com.codereview.telegrambotparser.config.BotConfig;
 import com.codereview.telegrambotparser.job.HHParser;
+import com.codereview.telegrambotparser.job.HabrParser;
 import com.codereview.telegrambotparser.model.Vacancy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,25 @@ import java.util.List;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
+    enum VacancyType {
+        HH("HH Parser"),
+        HABR_C_SHARP("Habr Parser C#"),
+        HABR_JAVA("Habr Parser Java");
+
+        private final String displayName;
+
+        VacancyType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+   final BotConfig config;
+
+
     final VacancyService service;
-    final BotConfig config;
 
     public TelegramBot(BotConfig config, VacancyService service) {
         this.config = config;
@@ -64,12 +82,28 @@ public class TelegramBot extends TelegramLongPollingBot {
         // Здесь можно добавить код для парсинга вакансий из различных источников
         // и форматирования списка вакансий
 
-        String vacanciesMessage = "Список новых вакансий по Java на hh.ru:\n";
-        sendMessageToChat(chatId, vacanciesMessage);
+        /*String vacanciesMessage = "Список новых вакансий:\n";
+        sendMessageToChat(chatId, vacanciesMessage); */
+        StringBuilder vacanciesMessage = new StringBuilder("Список новых вакансий:\n");
+
+        for (VacancyType type : VacancyType.values()) {
+            vacanciesMessage.append(type.getDisplayName()).append("\n");
+        }
+
+        // Отправка сообщения в чат
+        sendMessageToChat(chatId, vacanciesMessage.toString());
+
         HHParser hhParser = new HHParser("Java");
         service.addAll(hhParser.start());
         List<Vacancy> vacancies = service.getAll();
         getMessageListVacancies(chatId, vacancies);
+
+        HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
+        HabrParser habrParserJava = new HabrParser("java&s[]=2");
+        getMessageListVacancies(chatId, hhParser.start());
+        getMessageListVacancies(chatId, habrParserCharp.start());
+        getMessageListVacancies(chatId, habrParserJava.start());
+
     }
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies) {
