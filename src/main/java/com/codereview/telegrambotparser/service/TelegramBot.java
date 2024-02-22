@@ -90,7 +90,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         System.out.println("записали вакансии в список");
         getMessageListVacancies(chatId, vacancies);
 
-       /* HabrParser habrParserCharp = new HabrParser("C#");
+        HabrParser habrParserCharp = new HabrParser("C#");
         service.addAll(habrParserCharp.start());
         vacancies = service.getByTypeAndSite(VacancyType.C_SHARP, NameSite.HABR);
         getMessageListVacancies(chatId, vacancies);
@@ -98,7 +98,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         HabrParser habrParserJava = new HabrParser("Java");
         service.addAll(habrParserJava.start());
         vacancies = service.getByTypeAndSite(VacancyType.JAVA, NameSite.HABR);
-        getMessageListVacancies(chatId, vacancies); */
+        getMessageListVacancies(chatId, vacancies);
 
     }
 

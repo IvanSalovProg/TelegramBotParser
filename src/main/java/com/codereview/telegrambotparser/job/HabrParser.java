@@ -87,7 +87,7 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
                 vacancyInformation.setGrade(grade);
                 vacancyInformation.setSchedule(schedule);
                 vacancyInformation.setType(vacancyType);
-               // vacancyInformation.setSite(NameSite.HABR);
+                vacancyInformation.setSite(NameSite.HABR);
                 positionCounter++;
             }
             return vacancyInformation;
