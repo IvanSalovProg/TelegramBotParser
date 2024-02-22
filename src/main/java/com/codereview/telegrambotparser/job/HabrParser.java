@@ -57,27 +57,37 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
 
         List<Vacancy> element = elements.stream().map(q -> {
             Vacancy vacancyInformation = new Vacancy();
-            Element titleElement1 = q.getElementsByClass("vacancy-card__title-link").first();
-            if (titleElement1 != null) {
-                String element1 = "";
-                element1 = titleElement1.getElementsByTag("a").text();
-                Element titleElement2 = q.getElementsByClass("vacancy-card__company").first();
-                String element2 = "";
-                if (titleElement2 != null)
-                    element2 = titleElement2.getElementsByTag("a").text();
-                Element titleElement3 = q.getElementsByClass("vacancy-card__info").first();
-                String element3 = "";
-                if (titleElement3 != null)
-                    element3 = titleElement3.getElementsByClass("vacancy-card__skills").text();
+            Element titleName = q.getElementsByClass("vacancy-card__title-link").first();
+            if (titleName != null) {
+                String name = "";
+                name = titleName.getElementsByTag("a").text();
+                Element titleCompany = q.getElementsByClass("vacancy-card__company").first();
+                String company = "";
+                if (titleCompany != null)
+                    company = titleCompany.getElementsByTag("a").text();
+                Element titleLocation = q.getElementsByClass("vacancy-card__meta").first();
+                String location = "";
+                if (titleLocation != null)
+                    location = titleLocation.getElementsByClass("inline-list").text();
+                Element titleSchedule = q.getElementsByClass("vacancy-card__meta").first();
+                String schedule = "";
+                if (titleSchedule != null)
+                    schedule = titleSchedule.getElementsByClass("inline-list").text();
+                Element titleGrade = q.getElementsByClass("vacancy-card__skills").first();
+                String grade = "";
+                if (titleGrade != null)
+                    grade = titleGrade.getElementsByClass("inline-list").text();
 
-                vacancyInformation.setLocation(element1);
-                vacancyInformation.setName(element2);
-                vacancyInformation.setCompany(element3);
-               // vacancyInformation.setUrl(url);
-              //  vacancyInformation.setGrade(grade);
-               // vacancyInformation.setSchedule(schedule);
+                String url = ("https://career.habr.com" + titleName.attr("href"));
+
+                vacancyInformation.setLocation(location);
+                vacancyInformation.setName(name);
+                vacancyInformation.setCompany(company);
+                vacancyInformation.setUrl(url);
+                vacancyInformation.setGrade(grade);
+                vacancyInformation.setSchedule(schedule);
                 vacancyInformation.setType(vacancyType);
-                vacancyInformation.setSite(NameSite.HABR);
+               // vacancyInformation.setSite(NameSite.HABR);
                 positionCounter++;
             }
             return vacancyInformation;

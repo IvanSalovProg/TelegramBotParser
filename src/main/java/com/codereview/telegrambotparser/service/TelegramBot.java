@@ -67,7 +67,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     //@Scheduled(cron = "${cron.scheduler}")
     //@Scheduled(cron = "@hourly")
-    @Scheduled(cron = "0 2 * * * *")
+   // @Scheduled(cron = "0 2 * * * *")
     private void sendVacancies(long chatId) {
         // Здесь можно добавить код для парсинга вакансий из различных источников
         // и форматирования списка вакансий
@@ -81,11 +81,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessageToChat(chatId, vacanciesMessage.toString());
 
         HHParser hhParser = new HHParser("Java");
-        service.addAll(hhParser.start());
+        System.out.println("создали парсер");
+        List<Vacancy> vacancies1 = hhParser.start();
+        System.out.println("сделали парсинг");
+        service.addAll(vacancies1);
+        System.out.println("добавили вакансии");
         List<Vacancy> vacancies = service.getByTypeAndSiteForLastHour(VacancyType.JAVA, NameSite.HH);
+        System.out.println("записали вакансии в список");
         getMessageListVacancies(chatId, vacancies);
 
-        HabrParser habrParserCharp = new HabrParser("C#");
+       /* HabrParser habrParserCharp = new HabrParser("C#");
         service.addAll(habrParserCharp.start());
         vacancies = service.getByTypeAndSite(VacancyType.C_SHARP, NameSite.HABR);
         getMessageListVacancies(chatId, vacancies);
@@ -93,7 +98,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         HabrParser habrParserJava = new HabrParser("Java");
         service.addAll(habrParserJava.start());
         vacancies = service.getByTypeAndSite(VacancyType.JAVA, NameSite.HABR);
-        getMessageListVacancies(chatId, vacancies);
+        getMessageListVacancies(chatId, vacancies); */
 
     }
 
