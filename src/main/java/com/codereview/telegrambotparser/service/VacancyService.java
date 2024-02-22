@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -40,5 +41,9 @@ public class VacancyService {
 
     public List<Vacancy> getByTypeAndSite(VacancyType vacancyType, NameSite site) {
         return repository.findByTypeAndSite(vacancyType, site);
+    }
+
+    public List<Vacancy> getByTypeAndSiteForLastHour(VacancyType vacancyType, NameSite site) {
+        return repository.findByTypeAndSiteForLastHour(vacancyType, site, LocalDateTime.now().minusHours(1));
     }
 }

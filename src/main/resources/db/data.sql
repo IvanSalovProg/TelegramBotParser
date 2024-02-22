@@ -11,5 +11,6 @@ create table VACANCY
     SCHEDULE varchar(1024),
     GRADE varchar(1024),
     URL varchar(1024),
-    SITE smallint
+    SITE smallint,
+    DATE_TIME timestamp
 );

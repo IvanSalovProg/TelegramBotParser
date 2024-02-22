@@ -1,8 +1,10 @@
 package com.codereview.telegrambotparser.model;
 
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vacancy")
@@ -40,4 +42,8 @@ public class Vacancy {
 
     @Column(name = "url")
     private String url;
+
+    @UpdateTimestamp
+    @Column(name = "date_time")
+    private LocalDateTime dateTime;
 }

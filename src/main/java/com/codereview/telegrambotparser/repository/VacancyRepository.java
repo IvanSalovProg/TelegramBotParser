@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -19,4 +20,7 @@ public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
 
     @Query("SELECT v FROM Vacancy v WHERE v.type =:type AND v.site =:site")
     List<Vacancy> findByTypeAndSite(VacancyType type, NameSite site);
+
+    @Query("SELECT v FROM Vacancy v WHERE v.type =:type AND v.site =:site AND v.dateTime >:dateTime")
+    List<Vacancy> findByTypeAndSiteForLastHour(VacancyType type, NameSite site, LocalDateTime dateTime);
 }

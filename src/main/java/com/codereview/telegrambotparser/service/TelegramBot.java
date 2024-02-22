@@ -7,6 +7,7 @@ import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -19,21 +20,6 @@ import java.util.List;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
-    /*enum VacancyType {
-        HH("HH Parser"),
-        HABR_C_SHARP("Habr Parser C#"),
-        HABR_JAVA("Habr Parser Java");
-
-        private final String displayName;
-
-        VacancyType(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-    }*/
     final BotConfig config;
 
     final VacancyService service;
@@ -79,26 +65,24 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessageToChat(chatId, welcomeMessage);
     }
 
+    //@Scheduled(cron = "${cron.scheduler}")
+    //@Scheduled(cron = "@hourly")
+    @Scheduled(cron = "0 2 * * * *")
     private void sendVacancies(long chatId) {
         // Здесь можно добавить код для парсинга вакансий из различных источников
         // и форматирования списка вакансий
 
-        /*String vacanciesMessage = "Список новых вакансий:\n";
-        sendMessageToChat(chatId, vacanciesMessage); */
         StringBuilder vacanciesMessage = new StringBuilder("Список новых вакансий:\n");
         vacanciesMessage.append(NameSite.HH).append(" ").append(VacancyType.JAVA).append("\n");
         vacanciesMessage.append(NameSite.HABR).append(" ").append(VacancyType.C_SHARP).append("\n");
         vacanciesMessage.append(NameSite.HABR).append(" ").append(VacancyType.JAVA).append("\n");
-/*        for (VacancyType type : VacancyType.values()) {
-            vacanciesMessage.append(type.name()).append("\n");
-        }*/
 
         // Отправка сообщения в чат
         sendMessageToChat(chatId, vacanciesMessage.toString());
 
         HHParser hhParser = new HHParser("Java");
         service.addAll(hhParser.start());
-        List<Vacancy> vacancies = service.getByTypeAndSite(VacancyType.JAVA, NameSite.HH);
+        List<Vacancy> vacancies = service.getByTypeAndSiteForLastHour(VacancyType.JAVA, NameSite.HH);
         getMessageListVacancies(chatId, vacancies);
 
         HabrParser habrParserCharp = new HabrParser("C#");
@@ -131,6 +115,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             textMessage.append(vacancies.get(index).getGrade()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getSchedule()).append(" ");
+            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getDateTime()).append(" ");
             textMessage.append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getUrl());
             textMessage.append(System.lineSeparator().repeat(1));
