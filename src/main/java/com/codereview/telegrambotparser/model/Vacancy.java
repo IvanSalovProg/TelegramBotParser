@@ -1,5 +1,6 @@
 package com.codereview.telegrambotparser.model;
 
+import com.codereview.telegrambotparser.model.base.AbstractEntity;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,12 +13,12 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Vacancy {
+public class Vacancy extends AbstractEntity {
 
-    @Id
+    /*@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long id;
+    private long id;*/
 
     @Column(name = "name")
     private String name;
