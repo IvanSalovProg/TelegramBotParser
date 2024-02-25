@@ -10,15 +10,37 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
+    private final String WELCOME_MESSAGE = "Привет! Я бот, который может уведомлять о новых вакансиях по следующим направлениям:\n" +
+            "- Python\n" +
+            "- Java\n" +
+            "- JavaScript\n" +
+            "- Data Science\n" +
+            "- QA\n" +
+            "- C#\n\n" +
+            "Для получения списка вакансий, отправь /vacancies";
+    private final String MESSAGE_1 = "Список новых вакансий.";
+    private final String MESSAGE_2 = "По направлению ";
+    private final String MESSAGE_3 = "c сайта ";
+    private final String MESSAGE_4 = "Всего вакансий: ";
+    private final String SEARCH_MESSAGE_1 = "[ссылка на вакансию](";
+    private final String SEARCH_MESSAGE_2 = "/)";
+    private final String START = "/start";
+    private final String VACANCIES = "/vacancies";
+    private final String START_DESCRIPTION = "get a welcome message";
+    private final String VACANCIES_DESCRIPTION = "get all vacancies by filter";
 
     final BotConfig config;
 
@@ -27,6 +49,15 @@ public class TelegramBot extends TelegramLongPollingBot {
     public TelegramBot(BotConfig config, VacancyService service) {
         this.config = config;
         this.service = service;
+        List<BotCommand> listofCommands = new ArrayList<>();
+        listofCommands.add(new BotCommand(START, START_DESCRIPTION));
+//      listofCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listofCommands.add(new BotCommand(VACANCIES, VACANCIES_DESCRIPTION));
+        try {
+            this.execute(new SetMyCommands(listofCommands, new BotCommandScopeDefault(), null));
+        } catch (TelegramApiException e) {
+            log.error("Error setting bot's command list: " + e.getMessage());
+        }
     }
 
     @Override
@@ -45,87 +76,78 @@ public class TelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if (messageText.equals("/start")) {
-                sendWelcomeMessage(chatId);
-            } else if (messageText.equals("/vacancies")) {
+            if (messageText.equals(START)) {
+                sendMessageToChat(chatId, WELCOME_MESSAGE);
+            } else if (messageText.equals(VACANCIES)) {
                 sendVacancies(chatId);
             }
         }
-    }
-
-    private void sendWelcomeMessage(long chatId) {
-        String welcomeMessage = "Привет! Я бот, который может уведомлять о новых вакансиях по следующим направлениям:\n" +
-                "- Python\n" +
-                "- Java\n" +
-                "- JavaScript\n" +
-                "- Data Science\n" +
-                "- QA\n" +
-                "- C#\n\n" +
-                "Для получения списка вакансий, отправь /vacancies";
-        sendMessageToChat(chatId, welcomeMessage);
     }
 
     //@Scheduled(cron = "${cron.scheduler}")
     //@Scheduled(cron = "@hourly")
    // @Scheduled(cron = "0 2 * * * *")
     private void sendVacancies(long chatId) {
-        // Здесь можно добавить код для парсинга вакансий из различных источников
-        // и форматирования списка вакансий
+        parsingVacanciesBySites();
 
-        StringBuilder vacanciesMessage = new StringBuilder("Список новых вакансий:\n");
-        vacanciesMessage.append(NameSite.HH).append(" ").append(VacancyType.JAVA).append("\n");
-        vacanciesMessage.append(NameSite.HABR).append(" ").append(VacancyType.C_SHARP).append("\n");
-        vacanciesMessage.append(NameSite.HABR).append(" ").append(VacancyType.JAVA).append("\n");
+        VacancyType type = VacancyType.JAVA;
+        NameSite site = NameSite.HH;
+        List<Vacancy> vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
 
-        // Отправка сообщения в чат
-        sendMessageToChat(chatId, vacanciesMessage.toString());
+        type = VacancyType.CSHARP;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
 
-        HHParser hhParser = new HHParser("Java");
-        System.out.println("создали парсер");
-        List<Vacancy> vacancies1 = hhParser.start();
-        System.out.println("сделали парсинг");
-        service.addAll(vacancies1);
-        System.out.println("добавили вакансии");
-        List<Vacancy> vacancies = service.getByTypeAndSiteForLastHour(VacancyType.JAVA, NameSite.HH);
-        System.out.println("записали вакансии в список");
-        getMessageListVacancies(chatId, vacancies);
+        type = VacancyType.DATASCIENCE;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
 
-        HabrParser habrParserCharp = new HabrParser("C#");
-        service.addAll(habrParserCharp.start());
-        vacancies = service.getByTypeAndSite(VacancyType.C_SHARP, NameSite.HABR);
-        getMessageListVacancies(chatId, vacancies);
+        type = VacancyType.JAVASCRIPT;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
 
-        HabrParser habrParserJava = new HabrParser("Java");
-        service.addAll(habrParserJava.start());
-        vacancies = service.getByTypeAndSite(VacancyType.JAVA, NameSite.HABR);
-        getMessageListVacancies(chatId, vacancies);
+        type = VacancyType.PYTHON;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
 
+        type = VacancyType.QA;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.CSHARP;
+        site = NameSite.HABR;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.JAVA;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
     }
 
-    private void getMessageListVacancies(long chatId, List<Vacancy> vacancies) {
+    private void getMessageListVacancies(long chatId, List<Vacancy> vacancies, VacancyType type, NameSite site) {
         StringBuilder textMessage = new StringBuilder();
-        sendMessageToChat(chatId, "Всего вакансий: " + vacancies.size());
+        textMessage.append(MESSAGE_1).append(System.lineSeparator().repeat(1));
+        textMessage.append(MESSAGE_2).append(type.name().toLowerCase()).append(" ");
+        textMessage.append(MESSAGE_3).append(new ReferenceManager().getNameSite(site));
+        textMessage.append(System.lineSeparator().repeat(2));
+        sendMessageToChat(chatId, MESSAGE_4 + vacancies.size());
         for (int index = 0; index < vacancies.size(); index++) {
-            if ((index != 0 && index % 5 == 0)) {
+            if ((index != 0 && index % 10 == 0)) {
                 sendMessageToChat(chatId, textMessage.toString());
                 textMessage = new StringBuilder();
             }
-            textMessage.append(vacancies.get(index).getId()).append(". ");
-            textMessage.append(vacancies.get(index).getName()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getCompany()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getLocation()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getGrade()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getSchedule()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getDateTime()).append(" ");
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(vacancies.get(index).getUrl());
-            textMessage.append(System.lineSeparator().repeat(1));
-            textMessage.append(System.lineSeparator().repeat(1));
+            textMessage.append(index + 1).append(". ").append(vacancies.get(index).getName()).append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getCompany()).append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getLocation()).append(System.lineSeparator().repeat(1));
+            textMessage.append(vacancies.get(index).getGrade()).append(System.lineSeparator().repeat(1));
+            String schedule = vacancies.get(index).getSchedule();
+            if(!schedule.isEmpty()) {
+                textMessage.append(schedule).append(System.lineSeparator().repeat(1));
+            }
+            textMessage.append(vacancies.get(index).getDateTime()).append(System.lineSeparator().repeat(1));
+            textMessage.append(SEARCH_MESSAGE_1).append(vacancies.get(index).getUrl()).append(SEARCH_MESSAGE_2);
+            textMessage.append(System.lineSeparator().repeat(2));
 
             if (index == vacancies.size() - 1) {
                 sendMessageToChat(chatId, textMessage.toString());
@@ -135,12 +157,25 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void sendMessageToChat(long chatId, String message) {
         SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
         sendMessage.setChatId(chatId);
         sendMessage.setText(message);
+        sendMessage.disableWebPagePreview();
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Scheduled(cron = "0 2 * * * *")
+    private void parsingVacanciesBySites() {
+        for(VacancyType type : VacancyType.values()) {
+            log.info("parsing vacancies");
+            service.addAll(new HHParser(type).start());
+            if(type.equals(VacancyType.JAVA) || type.equals(VacancyType.CSHARP)) {
+                service.addAll(new HabrParser(type).start());
+            }
         }
     }
 }

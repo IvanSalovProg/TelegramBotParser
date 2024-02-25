@@ -20,16 +20,16 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
     private int positionCounter = 1;
     private VacancyType vacancyType;
 
-    public HabrParser(String vacancyType) {
+    public HabrParser(VacancyType vacancyType) {
         String vacancy = "";
         VacancyType type = null;
-        if(vacancyType.equals("Java")) {
+        if(vacancyType.equals(VacancyType.JAVA)) {
             vacancy = "java&s[]=2";
             type = VacancyType.JAVA;
         }
-        if(vacancyType.equals("C#")) {
+        if(vacancyType.equals(VacancyType.CSHARP)) {
             vacancy = "C%23&s%5B%5D=2";
-            type = VacancyType.C_SHARP;
+            type = VacancyType.CSHARP;
         }
         //HabrParser habrParserCharp = new HabrParser("C%23&s%5B%5D=2");
         //HabrParser habrParserJava = new HabrParser("java&s[]=2");
@@ -45,11 +45,9 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
         return Habr_URL + page;
     }
 
-
-
     @Override
     public List<Vacancy> getElements(String pageUrl) {
-        if (positionCounter > 20) return new ArrayList<>();
+        if (positionCounter > 10) return new ArrayList<>();
 
         int position = positionCounter;
         Document doc = getHtml(pageUrl);
@@ -78,7 +76,7 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
                 if (titleGrade != null)
                     grade = titleGrade.getElementsByClass("inline-list").text();
 
-                String url = ("https://career.habr.com" + titleName.attr("href"));
+                String url = "https://career.habr.com" + titleName.attr("href");
 
                 vacancyInformation.setLocation(location);
                 vacancyInformation.setName(name);

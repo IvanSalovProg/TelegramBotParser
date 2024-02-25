@@ -3,8 +3,8 @@ package com.codereview.telegrambotparser.model;
 public enum VacancyType {
     JAVA,
     PYTHON,
-    JAVA_SCRIPT,
-    DATA_SCIENCE,
+    JAVASCRIPT,
+    DATASCIENCE,
     QA,
-    C_SHARP
+    CSHARP
 }
