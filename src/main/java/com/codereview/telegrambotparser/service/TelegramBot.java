@@ -86,7 +86,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     //@Scheduled(cron = "${cron.scheduler}")
     //@Scheduled(cron = "@hourly")
-   // @Scheduled(cron = "0 2 * * * *")
+    // @Scheduled(cron = "0 2 * * * *")
     private void sendVacancies(long chatId) {
         parsingVacanciesBySites();
 
@@ -160,7 +160,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             textMessage.append(vacancies.get(index).getLocation()).append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getGrade()).append(System.lineSeparator().repeat(1));
             String schedule = vacancies.get(index).getSchedule();
-            if(!schedule.isEmpty()) {
+            if (!schedule.isEmpty()) {
                 textMessage.append(schedule).append(System.lineSeparator().repeat(1));
             }
             textMessage.append(vacancies.get(index).getDateTime()).append(System.lineSeparator().repeat(1));
@@ -188,12 +188,10 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Scheduled(cron = "0 2 * * * *")
     private void parsingVacanciesBySites() {
-        for(VacancyType type : VacancyType.values()) {
+        for (VacancyType type : VacancyType.values()) {
             log.info("parsing vacancies");
             service.addAll(new HHParser(type).start());
-            if(type.equals(VacancyType.JAVA) || type.equals(VacancyType.CSHARP)) {
-                service.addAll(new HabrParser(type).start());
-            }
+            service.addAll(new HabrParser(type).start());
         }
     }
 }
