@@ -123,6 +123,24 @@ public class TelegramBot extends TelegramLongPollingBot {
         type = VacancyType.JAVA;
         vacancies = service.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.PYTHON;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.JAVASCRIPT;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.QA;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.DATASCIENCE;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+
     }
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies, VacancyType type, NameSite site) {
