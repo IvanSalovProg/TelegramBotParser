@@ -43,7 +43,7 @@ public class HabrParser extends VacancyParser {  //https://career.habr.com/vacan
             Habr_URL = URL_PART1 + PYTHON_ + URL_PART2;
         }
         else {Habr_URL = URL_PART1 + vacancyType.name().toLowerCase() + URL_PART2;}
-        
+
         this.vacancyType = vacancyType;
       /*   String vacancy = "";
         VacancyType type = null;
