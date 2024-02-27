@@ -4,6 +4,7 @@ import com.codereview.telegrambotparser.config.BotConfig;
 import com.codereview.telegrambotparser.job.HHParser;
 import com.codereview.telegrambotparser.job.HabrParser;
 import com.codereview.telegrambotparser.job.JobbyParser;
+import com.codereview.telegrambotparser.job.HexletParser;
 import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
@@ -166,6 +167,31 @@ public class TelegramBot extends TelegramLongPollingBot {
         vacancies = service.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
+        type = VacancyType.CSHARP;
+        site = NameSite.HEXLET;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.JAVA;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.PYTHON;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.JAVASCRIPT;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.QA;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
+        type = VacancyType.DATASCIENCE;
+        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        getMessageListVacancies(chatId, vacancies, type, site);
+
 
 
     }
@@ -220,6 +246,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             service.addAll(new HHParser(type).start());
             service.addAll(new HabrParser(type).start());
             service.addAll(new JobbyParser(type).start());
+            service.addAll(new HexletParser(type).start());
         }
     }
 }
