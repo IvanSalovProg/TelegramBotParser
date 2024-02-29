@@ -6,6 +6,7 @@ import com.codereview.telegrambotparser.job.HabrParser;
 import com.codereview.telegrambotparser.job.JobbyParser;
 import com.codereview.telegrambotparser.job.HexletParser;
 import com.codereview.telegrambotparser.model.NameSite;
+import com.codereview.telegrambotparser.model.UserChat;
 import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +15,15 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -31,12 +38,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             "- JavaScript\n" +
             "- Data Science\n" +
             "- QA\n" +
-            "- C#\n\n" +
-            "Для получения списка вакансий, отправь /vacancies";
+            "- C#\n\n";//+
+    //"Для начала давай пройдём регистрацию:";
     private final String MESSAGE_1 = "Список новых вакансий.";
     private final String MESSAGE_2 = "По направлению ";
     private final String MESSAGE_3 = "c сайта ";
     private final String MESSAGE_4 = "Всего вакансий: ";
+    private final String MESSAGE_5 = "Введите свою почту: ";
+    //private final String MESSAGE_6 = "Введите интересующее направление: ";
+    private final String MESSAGE_7 = "Для получения списка вакансий, отправь /vacancies";
+    private final String MESSAGE_8 = "регистрация прошла успешно";
     private final String SEARCH_MESSAGE_1 = "[ссылка на вакансию](";
     private final String SEARCH_MESSAGE_2 = "/)";
     private final String START = "/start";
@@ -46,17 +57,19 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     final BotConfig config;
 
-    final VacancyService service;
+    final VacancyService vacancyService;
+    final UserService userService;
 
-    public TelegramBot(BotConfig config, VacancyService service) {
+    public TelegramBot(BotConfig config, VacancyService vacancyService, UserService userService) {
         this.config = config;
-        this.service = service;
-        List<BotCommand> listofCommands = new ArrayList<>();
-        listofCommands.add(new BotCommand(START, START_DESCRIPTION));
-//      listofCommands.add(new BotCommand("/help", "info how to use this bot"));
-        listofCommands.add(new BotCommand(VACANCIES, VACANCIES_DESCRIPTION));
+        this.vacancyService = vacancyService;
+        this.userService = userService;
+        List<BotCommand> listOfCommands = new ArrayList<>();
+        listOfCommands.add(new BotCommand(START, START_DESCRIPTION));
+//      listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand(VACANCIES, VACANCIES_DESCRIPTION));
         try {
-            this.execute(new SetMyCommands(listofCommands, new BotCommandScopeDefault(), null));
+            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list: " + e.getMessage());
         }
@@ -74,16 +87,38 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
+        try {
+            if (update.hasMessage() && update.getMessage().hasText()) {
+                String messageText = update.getMessage().getText();
+                long chatId = update.getMessage().getChatId();
 
-            if (messageText.equals(START)) {
-                sendMessageToChat(chatId, WELCOME_MESSAGE);
-            } else if (messageText.equals(VACANCIES)) {
-                sendVacancies(chatId);
+                switch (messageText) {
+                    case START -> {
+                        execute(message(update.getMessage(), WELCOME_MESSAGE));
+                        //sendMessageToChat(chatId, MESSAGE_5);
+                    }
+                    case VACANCIES -> sendVacancies(chatId);
+                    case "Фильр" -> message(update.getMessage(), "Filter press button");
+                    default -> {
+                        registrationUser(chatId, messageText);
+                        sendMessageToChat(chatId, MESSAGE_8);
+                        sendMessageToChat(chatId, MESSAGE_7);
+                    }
+                }
+            } else if (update.hasCallbackQuery()) {
+                String str = update.getCallbackQuery().getData();
+                parseButton(str, update.getCallbackQuery());
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
+    }
+
+    private void registrationUser(Long chatId, String email) {
+        UserChat userChat = new UserChat();
+        userChat.setChatId(chatId);
+        userChat.setEmail(email);
+        userService.registration(userChat);
     }
 
     //@Scheduled(cron = "${cron.scheduler}")
@@ -92,107 +127,115 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void sendVacancies(long chatId) {
         parsingVacanciesBySites();
 
-        VacancyType type = VacancyType.JAVA;
+        for (VacancyType type : VacancyType.values()) {
+            log.info("parsing vacancies {} on the site Head Hanter", type);
+            for (NameSite site : NameSite.values()) {
+                List<Vacancy> vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
+                getMessageListVacancies(chatId, vacancies, type, site);
+            }
+        }
+
+      /*  VacancyType type = VacancyType.JAVA;
         NameSite site = NameSite.HH;
-        List<Vacancy> vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        List<Vacancy> vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.CSHARP;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.DATASCIENCE;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVASCRIPT;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.PYTHON;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.QA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.CSHARP;
         site = NameSite.HABR;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        //site = NameSite.HABR;
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.PYTHON;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVASCRIPT;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.QA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.DATASCIENCE;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.CSHARP;
         site = NameSite.JOBBY;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.PYTHON;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVASCRIPT;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.QA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.DATASCIENCE;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.CSHARP;
         site = NameSite.HEXLET;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.PYTHON;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.JAVASCRIPT;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.QA;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
 
         type = VacancyType.DATASCIENCE;
-        vacancies = service.getByTypeAndSiteForLastHour(type, site);
+        vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
         getMessageListVacancies(chatId, vacancies, type, site);
-
-
+*/
 
     }
 
@@ -226,6 +269,44 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    private void parseButton(String selectButton, CallbackQuery callbackQuery) {
+        try {
+            if (selectButton.contains("Фильтр")) {
+                message(callbackQuery.getMessage(), selectButton);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public SendMessage message(Message message, String update) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(message.getChatId().toString());
+        setButtonSearch(sendMessage);
+        sendMessage.setText(update);
+        return sendMessage;
+    }
+
+    private void setButtonSearch(SendMessage sendMessage) {
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        KeyboardButton button = new KeyboardButton("Фильтр");
+        WebAppInfo webAppInfo = new WebAppInfo("https://test-bot-phi-ashen.vercel.app/");
+        button.setWebApp(webAppInfo);
+
+        List<KeyboardRow> keyboardRowList = new ArrayList<>();
+        KeyboardRow keyboardFirstRow = new KeyboardRow();
+        keyboardFirstRow.add(button);
+        keyboardRowList.add(keyboardFirstRow);
+        replyKeyboardMarkup.setKeyboard(keyboardRowList);
+    }
+
     private void sendMessageToChat(long chatId, String message) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
@@ -239,14 +320,15 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    @Scheduled(cron = "0 2 * * * *")
+    @Scheduled(cron = "0 15 * * * *")
     private void parsingVacanciesBySites() {
         for (VacancyType type : VacancyType.values()) {
-            log.info("parsing vacancies");
-            service.addAll(new HHParser(type).start());
-            service.addAll(new HabrParser(type).start());
-            service.addAll(new JobbyParser(type).start());
-            service.addAll(new HexletParser(type).start());
+            log.info("parsing vacancies {} on the site Head Hanter", type);
+            vacancyService.addAll(new HHParser(type).start());
+            log.info("parsing vacancies {} on the site Habr", type);
+            vacancyService.addAll(new HabrParser(type).start());
+            vacancyService.addAll(new JobbyParser(type).start());
+            vacancyService.addAll(new HexletParser(type).start());
         }
     }
 }
