@@ -1,16 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@mui/material";
 import Layout from "./components/Layout/Layout";
 import classes from "./index.module.css";
 
+const tg = window.Telegram.WebApp;
+
 function App() {
   const [sliderValue, setSliderValue] = useState(50000);
+
+  useEffect(()=>{
+    tg.ready();
+  },[])
 
   const changeSliderValueHandler = (event, value) => {
     setSliderValue(value);
   };
 
-  console.log(sliderValue);
+  const submitAreaHandler = async () => {
+    const id = tg.initDataUnsafe?.user?.username;
+
+    const result = await fetch(`/api/telegram-bot/${id}`, {
+      method:'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({username: id })
+    })
+  };
+
   return (
     <Layout>
       <div className={classes.filters}>
@@ -52,10 +69,12 @@ function App() {
             </label>
           </div>
         </div>
-        <div style={classes.areas}>
+        <div className={classes.areas}>
           <h3 className={classes["areas-title"]}>Специализация:</h3>
           <div className={classes["areas-btn-inner"]}>
-            <button className={classes.btn}>JavaScript</button>
+            <button className={classes.btn} onClick={submitAreaHandler}>
+              JavaScript
+            </button>
             <button className={classes.btn}>C#</button>
             <button className={classes.btn}>Java</button>
             <button className={classes.btn}>QA</button>
