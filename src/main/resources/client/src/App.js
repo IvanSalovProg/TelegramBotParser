@@ -8,24 +8,32 @@ const tg = window.Telegram.WebApp;
 function App() {
   const [sliderValue, setSliderValue] = useState(50000);
 
-  useEffect(()=>{
+  useEffect(() => {
     tg.ready();
-  },[])
+  }, []);
 
   const changeSliderValueHandler = (event, value) => {
     setSliderValue(value);
   };
 
   const submitAreaHandler = async () => {
-    const id = tg.initDataUnsafe?.user?.username;
+    const id = "3333";
 
-    const result = await fetch(`/api/telegram-bot/${id}`, {
-      method:'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({username: id })
-    })
+    try {
+      const result = await fetch(`/api/telegram-bot/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ testId: id }),
+      });
+
+      if (!result.ok) {
+        throw new Error("Ошибка при отправке запроса");
+      }
+    } catch (error) {
+      console.error("Произошла ошибка:", error.message);
+    }
   };
 
   return (
