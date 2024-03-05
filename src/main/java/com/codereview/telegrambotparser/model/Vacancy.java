@@ -1,10 +1,12 @@
 package com.codereview.telegrambotparser.model;
 
 import com.codereview.telegrambotparser.model.base.AbstractEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,11 +16,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Vacancy extends AbstractEntity {
-
-    /*@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private long id;*/
 
     @Column(name = "name")
     private String name;

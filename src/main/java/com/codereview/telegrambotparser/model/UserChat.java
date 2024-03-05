@@ -1,13 +1,13 @@
 package com.codereview.telegrambotparser.model;
 
 import com.codereview.telegrambotparser.model.base.AbstractEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import javax.persistence.*;
-import javax.validation.constraints.Email;
 
 @Entity
 @Table(name = "user_chat")
@@ -17,12 +17,6 @@ import javax.validation.constraints.Email;
 @AllArgsConstructor
 public class UserChat extends AbstractEntity {
 
-/*    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private long id;*/
-
-    @Email
     @Column(name = "email")
     private String email;
 

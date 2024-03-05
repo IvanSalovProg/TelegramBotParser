@@ -1,6 +1,6 @@
 package com.codereview.telegrambotparser.model.base;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.util.ProxyUtils;

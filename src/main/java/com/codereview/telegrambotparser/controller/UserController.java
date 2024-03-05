@@ -3,15 +3,14 @@ package com.codereview.telegrambotparser.controller;
 import com.codereview.telegrambotparser.dto.UserChatDTO;
 import com.codereview.telegrambotparser.model.UserChat;
 import com.codereview.telegrambotparser.service.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
-/*@Slf4j
+@Slf4j
 @RestController
 @RequestMapping(value = UserController.REST_URL, produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserController {
@@ -53,4 +52,3 @@ public class UserController {
     }
 
 }
-*/
