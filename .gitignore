@@ -4,3 +4,6 @@ target
 *.iml
 log
 *.patch
+
+# dependencies
+/node_modules

@@ -17,7 +17,7 @@ function App() {
   };
 
   const submitAreaHandler = async () => {
-    const id = "3333";
+    const id = "1";
 
     try {
       const result = await fetch(`/api/telegram-bot/${id}`, {
