@@ -20,7 +20,7 @@ function App() {
     const id = "1";
 
     try {
-      const result = await fetch(`/api/telegram-bot/${id}`, {
+      const result = await fetch(`http://localhost:8080/api/telegram-bot/{id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

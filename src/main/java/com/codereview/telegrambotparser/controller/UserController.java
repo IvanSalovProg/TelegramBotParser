@@ -2,17 +2,15 @@ package com.codereview.telegrambotparser.controller;
 
 import com.codereview.telegrambotparser.dto.UserChatDTO;
 import com.codereview.telegrambotparser.model.UserChat;
+import com.codereview.telegrambotparser.model.VacancyType;
 import com.codereview.telegrambotparser.service.UserService;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping(value = UserController.REST_URL, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = UserController.REST_URL)
+@CrossOrigin
 public class UserController {
 
     public static final String REST_URL = "/api/telegram-bot";
@@ -22,33 +20,28 @@ public class UserController {
         this.service = service;
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Transactional
-    public void update(@Valid @RequestBody UserChatDTO userChatDTO, @PathVariable long id) {
-        log.info("update user {} with id={}", userChatDTO, id);
-        if (userChatDTO.isNew()) {
+    @PutMapping(value = "/{name}")
+    public void update(@RequestParam String type, @PathVariable String name) {
+        log.info("update user {} with id={}", name);
+/*        if (userChatDTO.isNew()) {
             userChatDTO.setId(id);
         } else if (userChatDTO.id() != id) {
             throw new RuntimeException(userChatDTO.getClass().getSimpleName() + " must has id=" + id);
-        }
-        UserChat user = new UserChat();
-        user.setId(userChatDTO.getId());
-        //user.setGrade(userChatDTO.getGrade());
-        user.setType(userChatDTO.getType());
+        }*/
+        UserChat user = service.getByName(name);
+        user.setType(VacancyType.valueOf(type));
         service.update(user);
         log.info("User data updated");
     }
 
-    @GetMapping("/{id}")
-    public UserChatDTO get(@PathVariable long id) {
-        log.info("get user {}", id);
-        UserChat user = service.get(id);
+    @GetMapping("/{name}")
+    public UserChatDTO get(@PathVariable String name) {
+        log.info("get user {}", name);
+        UserChat user = service.getByName(name);
         UserChatDTO userChatDTO = new UserChatDTO();
         userChatDTO.setId(user.getId());
         //userChatDTO.setGrade(user.getGrade());
         userChatDTO.setType(user.getType());
         return userChatDTO;
     }
-
 }

@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<UserChat, Long> {
 
     @Query("SELECT u FROM UserChat u WHERE u.chatId =:chatId")
     UserChat getByChatId(long chatId);
+
+    @Query("SELECT u FROM UserChat u WHERE u.name =:name")
+    UserChat findByName(String name);
 }

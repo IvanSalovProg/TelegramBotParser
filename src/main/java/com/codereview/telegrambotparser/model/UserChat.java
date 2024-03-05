@@ -23,6 +23,9 @@ public class UserChat extends AbstractEntity {
     @Column(name = "chat_id")
     private Long chatId;
 
+    @Column(name = "name")
+    private String name;
+
     @Column(name = "type")
     private VacancyType type;
 

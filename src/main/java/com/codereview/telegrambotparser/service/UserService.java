@@ -49,4 +49,8 @@ public class UserService {
     public List<UserChat> getAll() {
         return repository.findAll();
     }
+
+    public UserChat getByName(String name) {
+        return repository.findByName(name);
+    }
 }

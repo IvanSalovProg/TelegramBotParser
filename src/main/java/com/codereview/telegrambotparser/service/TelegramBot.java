@@ -107,7 +107,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     default -> {
                         if (numberMessages == 1) {
                             if (userService.isValidEmail(messageText)) {
-                                registrationUser(chatId, messageText);
+                                registrationUser(chatId, messageText, update.getMessage().getChat().getUserName());
                                 execute(message(update.getMessage(), MESSAGE_8));
                                 execute(message(update.getMessage(), MESSAGE_7));
                                 numberMessages = 0;
@@ -127,11 +127,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void registrationUser(Long chatId, String email) {
+    private void registrationUser(Long chatId, String email, String name) {
         UserChat userChat = new UserChat();
         userChat.setChatId(chatId);
         userChat.setEmail(email);
         userChat.setType(VacancyType.JAVA);
+        userChat.setName(name);
         userService.registration(userChat);
     }
 
