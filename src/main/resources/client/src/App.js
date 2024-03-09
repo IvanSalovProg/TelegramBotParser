@@ -17,24 +17,24 @@ function App() {
   };
 
   const submitAreaHandler = async () => {
-    const id = "1";
+    const name = "vodjanoj";
 
     try {
-      const result = await fetch(`http://localhost:8080/api/telegram-bot/{id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ testId: id }),
-      });
+      const result = await fetch(`http://localhost:8080/api/telegram-bot/${name}`, {
+      method: "PUT",
+          headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type: 'JAVASCRIPT' }),
+    });
 
-      if (!result.ok) {
-        throw new Error("Ошибка при отправке запроса");
-      }
-    } catch (error) {
-      console.error("Произошла ошибка:", error.message);
+    if (!result.ok) {
+      throw new Error("Ошибка при отправке запроса");
     }
-  };
+  } catch (error) {
+    console.error("Произошла ошибка:", error.message);
+  }
+};
 
   return (
     <Layout>

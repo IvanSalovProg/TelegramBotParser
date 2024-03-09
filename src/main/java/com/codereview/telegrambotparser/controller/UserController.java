@@ -5,6 +5,7 @@ import com.codereview.telegrambotparser.model.UserChat;
 import com.codereview.telegrambotparser.model.VacancyType;
 import com.codereview.telegrambotparser.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -20,8 +21,8 @@ public class UserController {
         this.service = service;
     }
 
-    @PutMapping(value = "/{name}")
-    public void update(@RequestParam String type, @PathVariable String name) {
+    @PutMapping(value = "/{name}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void update(@RequestBody UserChatDTO userChatDTO, @PathVariable String name) {
         log.info("update user {} with id={}", name);
 /*        if (userChatDTO.isNew()) {
             userChatDTO.setId(id);
@@ -29,7 +30,7 @@ public class UserController {
             throw new RuntimeException(userChatDTO.getClass().getSimpleName() + " must has id=" + id);
         }*/
         UserChat user = service.getByName(name);
-        user.setType(VacancyType.valueOf(type));
+        user.setType(userChatDTO.getType());
         service.update(user);
         log.info("User data updated");
     }
