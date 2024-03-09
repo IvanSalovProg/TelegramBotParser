@@ -1,6 +1,6 @@
 package com.codereview.telegrambotparser.controller;
 
-import com.codereview.telegrambotparser.dto.UserChatDTO;
+/*import com.codereview.telegrambotparser.dto.UserChatDTO;
 import com.codereview.telegrambotparser.model.UserChat;
 import com.codereview.telegrambotparser.model.VacancyType;
 import com.codereview.telegrambotparser.service.UserService;
@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping(value = UserController.REST_URL)
-@CrossOrigin
+@CrossOrigin*/
 public class UserController {
 
-    public static final String REST_URL = "/api/telegram-bot";
+   /* public static final String REST_URL = "/api/telegram-bot";
     private final UserService service;
 
     public UserController(UserService service) {
@@ -24,11 +24,11 @@ public class UserController {
     @PutMapping(value = "/{name}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void update(@RequestBody UserChatDTO userChatDTO, @PathVariable String name) {
         log.info("update user {} with id={}", name);
-/*        if (userChatDTO.isNew()) {
+*//*        if (userChatDTO.isNew()) {
             userChatDTO.setId(id);
         } else if (userChatDTO.id() != id) {
             throw new RuntimeException(userChatDTO.getClass().getSimpleName() + " must has id=" + id);
-        }*/
+        }*//*
         UserChat user = service.getByName(name);
         user.setType(userChatDTO.getType());
         service.update(user);
@@ -44,5 +44,5 @@ public class UserController {
         //userChatDTO.setGrade(user.getGrade());
         userChatDTO.setType(user.getType());
         return userChatDTO;
-    }
+    }*/
 }

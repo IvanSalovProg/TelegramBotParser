@@ -21,7 +21,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
@@ -39,22 +41,23 @@ public class TelegramBot extends TelegramLongPollingBot {
             "- JavaScript\n" +
             "- Data Science\n" +
             "- QA\n" +
-            "- C#\n\n";//+
-    //"Для начала давай пройдём регистрацию:";
+            "- C#\n\n";
     private final String MESSAGE_1 = "Список новых вакансий.";
     private final String MESSAGE_2 = "По направлению ";
     private final String MESSAGE_3 = "c сайта ";
     private final String MESSAGE_4 = "Всего вакансий: ";
     private final String MESSAGE_5 = "Введите свою почту: ";
-    //private final String MESSAGE_6 = "Введите интересующее направление: ";
     private final String MESSAGE_7 = "Для получения списка вакансий, отправь /vacancies";
     private final String MESSAGE_8 = "регистрация прошла успешно";
     private final String SEARCH_MESSAGE_1 = "[ссылка на вакансию](";
     private final String SEARCH_MESSAGE_2 = "/)";
     private final String START = "/start";
     private final String VACANCIES = "/vacancies";
-    private final String START_DESCRIPTION = "get a welcome message";
-    private final String VACANCIES_DESCRIPTION = "get all vacancies by filter";
+    private final String UPDATE_VACANCY_TYPE = "/update_vacancy_type";
+    private final String START_DESCRIPTION = "старт";
+    private final String VACANCIES_DESCRIPTION = "получение всех вакансий за час";
+    private final String UPDATE_VACANCY_TYPE_DESCRIPTION = "сменить направление вакансий";
+    private final String ERROR_MAIL_MESSAGE = "введен неправильный формат почты, повторите снова";
     private int numberMessages = 0;
     final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
 
@@ -70,7 +73,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.userService = userService;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand(START, START_DESCRIPTION));
-//      listOfCommands.add(new BotCommand("/help", "info how to use this bot"));
+        listOfCommands.add(new BotCommand(UPDATE_VACANCY_TYPE, UPDATE_VACANCY_TYPE_DESCRIPTION));
         listOfCommands.add(new BotCommand(VACANCIES, VACANCIES_DESCRIPTION));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
@@ -102,17 +105,18 @@ public class TelegramBot extends TelegramLongPollingBot {
                             execute(message(update.getMessage(), MESSAGE_7));
                         }
                     }
-                    case VACANCIES -> sendVacancies(chatId);
-                    case "Фильр" -> message(update.getMessage(), "Filter press button");
+                    case VACANCIES -> sendVacanciesByClick(chatId);
+                    case UPDATE_VACANCY_TYPE -> setButtonsVacancyType(update.getMessage().getChatId());
                     default -> {
                         if (numberMessages == 1) {
                             if (userService.isValidEmail(messageText)) {
-                                registrationUser(chatId, messageText, update.getMessage().getChat().getUserName());
+                                userService.registration(chatId, messageText, update.getMessage().getChat().getUserName());
                                 execute(message(update.getMessage(), MESSAGE_8));
-                                execute(message(update.getMessage(), MESSAGE_7));
                                 numberMessages = 0;
+                                setButtonsVacancyType(chatId);
+                                execute(message(update.getMessage(), MESSAGE_7));
                             } else {
-                                execute(message(update.getMessage(), "введен неправильный формат почты, повторите снова"));
+                                execute(message(update.getMessage(), ERROR_MAIL_MESSAGE));
                                 numberMessages = 1;
                             }
                         }
@@ -127,53 +131,46 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void registrationUser(Long chatId, String email, String name) {
-        UserChat userChat = new UserChat();
-        userChat.setChatId(chatId);
-        userChat.setEmail(email);
-        userChat.setType(VacancyType.JAVA);
-        userChat.setName(name);
-        userService.registration(userChat);
-    }
-
-    private void sendVacancies(long chatId) {
-        parsingVacanciesBySites();
-        for (VacancyType type : VacancyType.values()) {
-            for (NameSite site : NameSite.values()) {
-                log.info("parsing vacancies {} on the site {}", type, site);
-                List<Vacancy> vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
-                getMessageListVacancies(chatId, vacancies, type, site);
-            }
-        }
+    private void sendVacanciesByClick(long chatId) throws InterruptedException {
+        //parsingVacanciesBySites();
+        UserChat user = userService.getByChatId(chatId);
+        sendVacancies(chatId, user.getType());
     }
 
     @Async("jobExecutor")
     @Scheduled(cron = "0 0 * * * *")
-    public void sendVacanciesSchedule() throws InterruptedException {
+    public void sendVacanciesBySchedule() throws InterruptedException {
         List<UserChat> userChatList = userService.getAll();
         for (UserChat userChat : userChatList) {
-            long chatId = userChat.getChatId();
-            VacancyType type = userChat.getType();
-            for (NameSite site : NameSite.values()) {
-                log.info("Vacancies {} on the site {} for user {} ", type, site, chatId);
-                List<Vacancy> vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
-                getMessageListVacancies(chatId, vacancies, type, site);
-                Thread.sleep(5000);
-            }
+            sendVacancies(userChat.getChatId(), userChat.getType());
+        }
+    }
+
+    private void sendVacancies(long chatId, VacancyType type) throws InterruptedException {
+        for (NameSite site : NameSite.values()) {
+            log.info("Vacancies {} on the site {} for user {} ", type, site, chatId);
+            List<Vacancy> vacancies = vacancyService.getByTypeAndSiteForLastHour(type, site);
+            getMessageListVacancies(chatId, vacancies, type, site);
+            Thread.sleep(5000);
         }
     }
 
     private void getMessageListVacancies(long chatId, List<Vacancy> vacancies, VacancyType type, NameSite site) {
         StringBuilder textMessage = new StringBuilder();
+        String nameSite = new ReferenceManager().getNameReference(site.name());
+        String vacancyType = new ReferenceManager().getNameReference(type.name());
         textMessage.append(MESSAGE_1).append(System.lineSeparator().repeat(1));
-        textMessage.append(MESSAGE_2).append(type.name().toLowerCase()).append(" ");
-        textMessage.append(MESSAGE_3).append(new ReferenceManager().getNameSite(site));
+        textMessage.append(MESSAGE_2).append(vacancyType).append(" ");
+        textMessage.append(MESSAGE_3).append(nameSite);
         textMessage.append(System.lineSeparator().repeat(2));
-        sendMessageToChat(chatId, MESSAGE_4 + vacancies.size());
         for (int index = 0; index < vacancies.size(); index++) {
             if ((index != 0 && index % 10 == 0)) {
                 sendMessageToChat(chatId, textMessage.toString());
                 textMessage = new StringBuilder();
+                textMessage.append(MESSAGE_1).append(System.lineSeparator().repeat(1));
+                textMessage.append(MESSAGE_2).append(vacancyType).append(" ");
+                textMessage.append(MESSAGE_3).append(nameSite);
+                textMessage.append(System.lineSeparator().repeat(2));
             }
             textMessage.append(index + 1).append(". ").append(vacancies.get(index).getName()).append(System.lineSeparator().repeat(1));
             textMessage.append(vacancies.get(index).getCompany()).append(System.lineSeparator().repeat(1));
@@ -183,7 +180,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (!schedule.isEmpty()) {
                 textMessage.append(schedule).append(System.lineSeparator().repeat(1));
             }
-            textMessage.append(vacancies.get(index).getDateTime()).append(System.lineSeparator().repeat(1));
+            //textMessage.append(vacancies.get(index).getDateTime()).append(System.lineSeparator().repeat(1));
             textMessage.append(SEARCH_MESSAGE_1).append(vacancies.get(index).getUrl()).append(SEARCH_MESSAGE_2);
             textMessage.append(System.lineSeparator().repeat(2));
 
@@ -194,10 +191,44 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void parseButton(String selectButton, CallbackQuery callbackQuery) {
+        long chatId = callbackQuery.getMessage().getChatId();
         try {
-            if (selectButton.contains("Фильтр")) {
-                message(callbackQuery.getMessage(), selectButton);
+            switch (selectButton) {
+                case "JAVA" -> {
+                    userService.updateType(chatId, VacancyType.JAVA);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                case "PYTHON" -> {
+                    userService.updateType(chatId, VacancyType.PYTHON);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                case "JAVASCRIPT" -> {
+                    userService.updateType(chatId, VacancyType.JAVASCRIPT);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                case "DATASCIENCE" -> {
+                    userService.updateType(chatId, VacancyType.DATASCIENCE);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                case "QA" -> {
+                    userService.updateType(chatId, VacancyType.QA);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                case "CSHARP" -> {
+                    userService.updateType(chatId, VacancyType.CSHARP);
+                    execute(message(callbackQuery.getMessage(), "направление вакансий обновлено"));
+                    execute(message(callbackQuery.getMessage(), MESSAGE_7));
+                }
+                default -> execute(message(callbackQuery.getMessage(), "введена неизвестная кнопка, повторите снова"));
             }
+            /*if (selectButton.contains("Фильтр")) {
+                message(callbackQuery.getMessage(), selectButton);
+            }*/
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -207,7 +238,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(message.getChatId().toString());
-        setButtonFilter(sendMessage);
         sendMessage.setText(update);
         return sendMessage;
     }
@@ -228,6 +258,58 @@ public class TelegramBot extends TelegramLongPollingBot {
         keyboardFirstRow.add(button);
         keyboardRowList.add(keyboardFirstRow);
         replyKeyboardMarkup.setKeyboard(keyboardRowList);
+    }
+
+    private void setButtonsVacancyType(long chatId) throws TelegramApiException {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText("Выберите направление вакансий:");
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine1 = new ArrayList<>();
+
+        InlineKeyboardButton JavaButton = new InlineKeyboardButton();
+        JavaButton.setText("Java");
+        JavaButton.setCallbackData("JAVA");
+
+        InlineKeyboardButton PythonButton = new InlineKeyboardButton();
+        PythonButton.setText("Python");
+        PythonButton.setCallbackData("PYTHON");
+
+        InlineKeyboardButton JavaScriptButton = new InlineKeyboardButton();
+        JavaScriptButton.setText("Java Script");
+        JavaScriptButton.setCallbackData("JAVASCRIPT");
+
+        rowInLine1.add(JavaButton);
+        rowInLine1.add(PythonButton);
+        rowInLine1.add(JavaScriptButton);
+
+        List<InlineKeyboardButton> rowInLine2 = new ArrayList<>();
+
+        InlineKeyboardButton DataScienceButton = new InlineKeyboardButton();
+        DataScienceButton.setText("Data Science");
+        DataScienceButton.setCallbackData("DATASCIENCE");
+
+        InlineKeyboardButton QAButton = new InlineKeyboardButton();
+        QAButton.setText("QA");
+        QAButton.setCallbackData("QA");
+
+        InlineKeyboardButton CSharpButton = new InlineKeyboardButton();
+        CSharpButton.setText("C#");
+        CSharpButton.setCallbackData("CSHARP");
+
+        rowInLine2.add(DataScienceButton);
+        rowInLine2.add(QAButton);
+        rowInLine2.add(CSharpButton);
+
+        rowsInLine.add(rowInLine1);
+        rowsInLine.add(rowInLine2);
+
+        markupInLine.setKeyboard(rowsInLine);
+        sendMessage.setReplyMarkup(markupInLine);
+
+        execute(sendMessage);
     }
 
     private void sendMessageToChat(long chatId, String message) {
