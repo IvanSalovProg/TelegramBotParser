@@ -114,7 +114,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                                 execute(message(update.getMessage(), MESSAGE_8));
                                 numberMessages = 0;
                                 setButtonsVacancyType(chatId);
-                                execute(message(update.getMessage(), MESSAGE_7));
                             } else {
                                 execute(message(update.getMessage(), ERROR_MAIL_MESSAGE));
                                 numberMessages = 1;
@@ -226,9 +225,6 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
                 default -> execute(message(callbackQuery.getMessage(), "введена неизвестная кнопка, повторите снова"));
             }
-            /*if (selectButton.contains("Фильтр")) {
-                message(callbackQuery.getMessage(), selectButton);
-            }*/
         } catch (Exception e) {
             log.error(e.getMessage());
         }

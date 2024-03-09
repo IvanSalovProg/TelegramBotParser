@@ -57,7 +57,7 @@ public class JobbyParser extends VacancyParser{
 
     @Override
     public List<Vacancy> getElements(String pageUrl) {
-        if (positionCounter > 10) return new ArrayList<>();
+        if (positionCounter > 50) return new ArrayList<>();
 
         int position = positionCounter;
         Document doc = getHtml(pageUrl);
