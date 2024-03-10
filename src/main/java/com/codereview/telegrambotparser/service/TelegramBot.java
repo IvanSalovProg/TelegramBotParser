@@ -131,7 +131,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void sendVacanciesByClick(long chatId) throws InterruptedException {
-        //parsingVacanciesBySites();
+        parsingVacanciesBySites();
         UserChat user = userService.getByChatId(chatId);
         sendVacancies(chatId, user.getType());
     }
@@ -274,7 +274,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         PythonButton.setCallbackData("PYTHON");
 
         InlineKeyboardButton JavaScriptButton = new InlineKeyboardButton();
-        JavaScriptButton.setText("Java Script");
+        JavaScriptButton.setText("JavaScript");
         JavaScriptButton.setCallbackData("JAVASCRIPT");
 
         rowInLine1.add(JavaButton);
