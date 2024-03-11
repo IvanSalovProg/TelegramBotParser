@@ -1,10 +1,10 @@
 package com.codereview.telegrambotparser.service;
 
 import com.codereview.telegrambotparser.config.BotConfig;
-import com.codereview.telegrambotparser.job.HHParser;
-import com.codereview.telegrambotparser.job.HabrParser;
-import com.codereview.telegrambotparser.job.JobbyParser;
-import com.codereview.telegrambotparser.job.HexletParser;
+import com.codereview.telegrambotparser.parser.HHParser;
+import com.codereview.telegrambotparser.parser.HabrParser;
+import com.codereview.telegrambotparser.parser.JobbyParser;
+import com.codereview.telegrambotparser.parser.HexletParser;
 import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.UserChat;
 import com.codereview.telegrambotparser.model.Vacancy;

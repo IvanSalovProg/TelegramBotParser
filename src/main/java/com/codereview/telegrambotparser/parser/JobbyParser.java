@@ -1,4 +1,4 @@
-package com.codereview.telegrambotparser.job;
+package com.codereview.telegrambotparser.parser;
 
 import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
@@ -11,38 +11,37 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Slf4j
-public class HexletParser extends VacancyParser{
-    private final String URL_PART1 = "https://cv.hexlet.io/ru/vacancy_filters/direction-";
-    private final String URL_PART2 = "";
-    private final String C_SHARP = "c%23";
-    private final String JAVA_ = "java";
-    private final String DATA_SCIENCE = "da";
-    private final String QA_ = "тестировщик";
-    private final String JAVASCRIPT_ = "js";
-    private final String PYTHON_ = "python";
+public class JobbyParser extends VacancyParser{
+    private final String URL_PART1 = "https://jobby.ai/student_jobsearch_m?page=1&emordesk=";
+    private final String URL_PART2 = "&isFirst=no";
+    private final String C_SHARP = "C%23";
+    private final String JAVA_ = "Java";
+    private final String DATA_SCIENCE = "DATA%20SCIENCE";
+    private final String QA_ = "QA";
+    private final String JAVASCRIPT_ = "JAVASCRIPT";
+    private final String PYTHON_ = "PYTHON";
 
-    private final String Hexlet_URL;
-    private final String PARS_VACANCIES = "card-body";
+    private final String Jobby_URL;
+    private final String PARS_VACANCIES = "bubble-element.group-item";
     private int positionCounter = 1;
     private VacancyType vacancyType;
 
-    public HexletParser(VacancyType vacancyType) {
+    public JobbyParser(VacancyType vacancyType) {
         if(vacancyType.equals(VacancyType.CSHARP)) {
-            Hexlet_URL = URL_PART1 + C_SHARP + URL_PART2;
+            Jobby_URL = URL_PART1 + C_SHARP + URL_PART2;
         } else if(vacancyType.equals(VacancyType.DATASCIENCE)) {
-            Hexlet_URL = URL_PART1 + DATA_SCIENCE + URL_PART2;
+            Jobby_URL = URL_PART1 + DATA_SCIENCE + URL_PART2;
         } else if(vacancyType.equals(VacancyType.JAVA)) {
-            Hexlet_URL = URL_PART1 + JAVA_ + URL_PART2;
+            Jobby_URL = URL_PART1 + JAVA_ + URL_PART2;
         } else if(vacancyType.equals(VacancyType.QA)) {
-            Hexlet_URL = URL_PART1 + QA_ + URL_PART2;
+            Jobby_URL = URL_PART1 + QA_ + URL_PART2;
         } else if(vacancyType.equals(VacancyType.JAVASCRIPT)) {
-            Hexlet_URL = URL_PART1 + JAVASCRIPT_ + URL_PART2;
+            Jobby_URL = URL_PART1 + JAVASCRIPT_ + URL_PART2;
         } else if(vacancyType.equals(VacancyType.PYTHON)) {
-            Hexlet_URL = URL_PART1 + PYTHON_ + URL_PART2;
+            Jobby_URL = URL_PART1 + PYTHON_ + URL_PART2;
         }
-        else {Hexlet_URL = URL_PART1 + vacancyType.name().toLowerCase() + URL_PART2;}
+        else {Jobby_URL = URL_PART1 + vacancyType.name().toLowerCase() + URL_PART2;}
 
         this.vacancyType = vacancyType;
 
@@ -53,7 +52,7 @@ public class HexletParser extends VacancyParser{
     }
 
     public String nextPageUrl(int page) {
-        return Hexlet_URL + page;
+        return Jobby_URL + page;
     }
 
     @Override
@@ -66,28 +65,28 @@ public class HexletParser extends VacancyParser{
 
         List<Vacancy> element = elements.stream().map(q -> {
             Vacancy vacancyInformation = new Vacancy();
-            Element titleName = q.getElementsByClass("card-title").first();
+            Element titleName = q.getElementsByClass("bubble-element.coaArp1").first();
             if (titleName != null) {
                 String name = "";
                 name = titleName.getElementsByTag("a").text();
-                Element titleCompany = q.getElementsByClass("").first();
+                Element titleCompany = q.getElementsByClass("bubble-element.coaMuaY0").first();
                 String company = "";
                 if (titleCompany != null)
                     company = titleCompany.getElementsByTag("a").text();
-                Element titleLocation = q.getElementsByClass("").first();
+                Element titleLocation = q.getElementsByClass("bubble-element.coaMva0").first();
                 String location = "";
                 if (titleLocation != null)
-                    location = titleLocation.getElementsByClass("").text();
-                Element titleSchedule = q.getElementsByClass("").first();
+                    location = titleLocation.getElementsByClass("bubble-element.coaMva0").text();
+                Element titleSchedule = q.getElementsByClass("bubble-element.coaMvaY0").first();
                 String schedule = "";
                 if (titleSchedule != null)
-                    schedule = titleSchedule.getElementsByClass("card-title").text();
-                Element titleGrade = q.getElementsByClass("").first();
+                    schedule = titleSchedule.getElementsByClass("bubble-element.coaMvaY0").text();
+                Element titleGrade = q.getElementsByClass("bubble-element.coaMvaY0").first();
                 String grade = "";
                 if (titleGrade != null)
-                    grade = titleGrade.getElementsByClass("").text();
+                    grade = titleGrade.getElementsByClass("bubble-element.coaMvaY0").text();
 
-                String url = "https://cv.hexlet.io/ru/vacancies" + titleName.attr("href");
+                String url = "https://jobby.ai" + titleName.attr("href");
 
                 vacancyInformation.setLocation(location);
                 vacancyInformation.setName(name);
@@ -96,7 +95,7 @@ public class HexletParser extends VacancyParser{
                 vacancyInformation.setGrade(grade);
                 vacancyInformation.setSchedule(schedule);
                 vacancyInformation.setType(vacancyType);
-                vacancyInformation.setSite(NameSite.HEXLET);
+                vacancyInformation.setSite(NameSite.JOBBY);
                 positionCounter++;
             }
             return vacancyInformation;

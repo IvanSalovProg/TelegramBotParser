@@ -1,4 +1,4 @@
-package com.codereview.telegrambotparser.job;
+package com.codereview.telegrambotparser.parser;
 
 import com.codereview.telegrambotparser.model.NameSite;
 import com.codereview.telegrambotparser.model.Vacancy;
