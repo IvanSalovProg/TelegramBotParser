@@ -20,7 +20,7 @@ public class ReferenceManager {
     private final String JOBBY = "Jobby";
     private final String JAVA = "Java";
     private final String PYTHON = "Python";
-    private final String JAVASCRIPT = "Java Script";
+    private final String JAVASCRIPT = "JavaScript";
     private final String DATASCIENCE = "Data Science";
     private final String QA = "QA";
     private final String CSHARP = "C#";

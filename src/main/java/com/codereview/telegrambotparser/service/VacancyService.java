@@ -5,6 +5,7 @@ import com.codereview.telegrambotparser.model.Vacancy;
 import com.codereview.telegrambotparser.model.VacancyType;
 import com.codereview.telegrambotparser.repository.VacancyRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VacancyService {
 
     private VacancyRepository repository;
@@ -23,6 +25,7 @@ public class VacancyService {
     }
 
     public void create(Vacancy vacancyDTO) {
+        log.info("create vacation {}", vacancyDTO);
         List<Vacancy> vacancy = repository.findByUrl(vacancyDTO.getUrl());
         if(vacancy.isEmpty()) {
             repository.save(vacancyDTO);
@@ -30,6 +33,7 @@ public class VacancyService {
     }
 
     public List<Vacancy> getAll() {
+        log.info("get all vacancies");
         return repository.findAll();
     }
 
@@ -40,10 +44,12 @@ public class VacancyService {
     }
 
     public List<Vacancy> getByTypeAndSite(VacancyType vacancyType, NameSite site) {
+        log.info("get vacancies by type {} and sate {}", vacancyType, site);
         return repository.findByTypeAndSite(vacancyType, site);
     }
 
     public List<Vacancy> getByTypeAndSiteForLastHour(VacancyType vacancyType, NameSite site) {
+        log.info("get vacancies by type {} site {} last hour", vacancyType, site);
         return repository.findByTypeAndSiteForLastHour(vacancyType, site, LocalDateTime.now().minusHours(1));
     }
 }

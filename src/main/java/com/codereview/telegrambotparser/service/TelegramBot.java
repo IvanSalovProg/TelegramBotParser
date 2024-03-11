@@ -131,7 +131,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void sendVacanciesByClick(long chatId) throws InterruptedException {
-        parsingVacanciesBySites();
+        //parsingVacanciesBySites();
         UserChat user = userService.getByChatId(chatId);
         sendVacancies(chatId, user.getType());
     }
